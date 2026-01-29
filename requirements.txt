@@ -1,0 +1,6 @@
+Flask
+flask-pymongo
+dnspython
+python-dotenv
+pytz
+tzlocal
