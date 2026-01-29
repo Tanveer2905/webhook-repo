@@ -1,47 +1,180 @@
-# Dev Assessment - Webhook Receiver
+GitHub Webhook Event Monitoring System
 
-Please use this repository for constructing the Flask webhook receiver.
+Overview
+This project is a real-time GitHub repository activity monitoring system. It captures repository events using GitHub Webhooks, stores the event data in MongoDB, and displays the latest activity on a web dashboard that refreshes every 15 seconds. The system demonstrates backend integration, webhook handling, secure configuration management, database storage, timezone-aware rendering, and frontend data presentation.
 
-*******************
+Features
 
-## Setup
+Captures GitHub Push, Pull Request, and Merge events
 
-* Create a new virtual environment
+Stores structured event data in MongoDB Atlas
 
-```bash
-pip install virtualenv
-```
+Prevents duplicate event storage
 
-* Create the virtual env
+Displays repository activity in a dashboard UI
 
-```bash
-virtualenv venv
-```
+Automatically refreshes event feed every 15 seconds
 
-* Activate the virtual env
+Converts UTC timestamps to the machine’s local timezone
 
-```bash
-source venv/bin/activate
-```
+Secure configuration using environment variables
 
-* Install requirements
+Modular Flask application using Blueprints
 
-```bash
+Cloud database integration
+
+Architecture Flow
+
+GitHub Repository (action-repo)
+→ GitHub Webhook Event
+→ Flask Webhook Endpoint (/webhook/receiver)
+→ MongoDB Atlas (Event Storage in UTC)
+→ Flask API (/events)
+→ Frontend Dashboard (Polling every 15 seconds)
+
+Tech Stack
+
+Backend: Flask (Python)
+Database: MongoDB Atlas (Cloud)
+Frontend: HTML, CSS, JavaScript
+Integration: GitHub Webhooks
+Tunneling: ngrok (for local testing)
+Timezone Handling: pytz, tzlocal
+
+Supported GitHub Events
+
+Push Event
+Format:
+{author} pushed to {to_branch} on {timestamp}
+
+Pull Request Event
+Format:
+{author} submitted a pull request from {from_branch} to {to_branch} on {timestamp}
+
+Merge Event
+Format:
+{author} merged branch {from_branch} to {to_branch} on {timestamp}
+
+API Endpoints
+
+/
+Method: GET
+Description: Loads the dashboard UI
+
+/webhook/receiver
+Method: POST
+Description: Receives GitHub webhook events
+
+/events
+Method: GET
+Description: Returns formatted event data for the UI
+
+Database Schema
+
+Each event document stored in MongoDB contains:
+
+request_id — Unique event identifier
+author — GitHub user who performed the action
+action — PUSH / PULL_REQUEST / MERGE
+from_branch — Source branch (if applicable)
+to_branch — Target branch
+timestamp — UTC time of event
+
+Timezone Handling
+
+All timestamps are stored in UTC for consistency.
+When events are sent to the UI, they are converted to the local timezone of the machine running the Flask application using tzlocal. This ensures proper display while maintaining database standardization.
+
+Environment Configuration
+
+This project uses environment variables for secure configuration.
+
+Create a file named .env in the project root and add:
+
+MONGO_URI=your_mongodb_connection_string
+
+Example:
+
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/github_events?retryWrites=true&w=majority
+
+The .env file is excluded from Git using .gitignore.
+
+How to Run Locally
+
+Clone the repository
+git clone <your-webhook-repo-link>
+cd webhook-repo
+
+Create virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+Install dependencies
 pip install -r requirements.txt
-```
 
-* Run the flask application (In production, please use Gunicorn)
+Create .env file and add your MongoDB URI
 
-```bash
+Run the Flask server
 python run.py
-```
 
-* The endpoint is at:
+Server runs on:
+http://127.0.0.1:5000
 
-```bash
-POST http://127.0.0.1:5000/webhook/receiver
-```
+Connecting GitHub Webhooks
 
-You need to use this as the base and setup the flask app. Integrate this with MongoDB (commented at `app/extensions.py`)
+Start ngrok
+ngrok http 5000
 
-*******************
+Copy the HTTPS forwarding URL
+
+In action-repo:
+Go to Settings → Webhooks → Add Webhook
+
+Payload URL:
+https://your-ngrok-url/webhook/receiver
+
+Content Type:
+application/json
+
+Select events:
+Push
+Pull Requests
+
+Testing the System
+
+Perform the following in the action-repo:
+
+Commit code (Push event)
+
+Create a Pull Request
+
+Merge a Pull Request
+
+The dashboard at / will update automatically every 15 seconds.
+
+Project Structure
+
+app/
+init.py
+extensions.py
+templates/index.html
+static/script.js
+webhook/routes.py
+
+run.py
+requirements.txt
+README.md
+.gitignore
+
+Notes
+
+MongoDB Atlas is used to simulate a production-style cloud database.
+
+All secrets are stored securely in environment variables.
+
+ngrok is used only for local webhook testing.
+
+The project follows best practices for webhook handling and time management.
+
+Author
+Tanveer Ahmad
